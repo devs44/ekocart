@@ -33,6 +33,7 @@ from .forms import *
 
 class HomeTemplateView(BaseMixin, TemplateView):
     template_name = 'home/base/index.html'
+   
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -43,7 +44,13 @@ class HomeTemplateView(BaseMixin, TemplateView):
             deleted_at__isnull=True).order_by('-view_count')
         context['brand'] = Brands.objects.filter(deleted_at__isnull=True)
         print(self.request.user)
+        
+        context['new'] = Products.objects.latest('created_at')
+        # context['best_seller'] = Products.objects.filter(
+        #         deleted_at__isnull=True).order_by['-sold_count']
         return context
+    
+    
 
 
 # Resgistration
@@ -451,6 +458,7 @@ class AddToCartView(EcomMixin, View):
         print(quantity, size)
         # getting product id
         product_id = self.kwargs['pro_id']
+        
         print(product_id, "add to cart")
         # get product
         product_obj = Products.objects.get(id=product_id)
@@ -513,6 +521,7 @@ class AddToCartView(EcomMixin, View):
             messages.success(self.request, "Item added to cart")
         return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
 
+        
 
 
 class UpdateQuantityView(View):
@@ -595,6 +604,14 @@ class CheckoutView(EcomMixin, BaseMixin, CreateView):
     form_class = CheckoutForm
     success_url = reverse_lazy('home:home')
 
+    def dispatch(self, request, *args, **kwargs):    
+        if request.user.is_authenticated and Customer.objects.filter(is_customer=True).exists():
+            pass
+        else:
+            return redirect("home:login")
+        return super().dispatch(request, *args, **kwargs)
+    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         cart_id = self.request.session.get('cart_id')
@@ -604,6 +621,16 @@ class CheckoutView(EcomMixin, BaseMixin, CreateView):
             cart_obj = None
         context['cart'] = cart_obj
         return context
+
+    # def get_object(self):
+    #     cart_id = self.request.session.get("cart_id")
+    #     cart_obj = Cart.objects.all(id=cart_id)
+        
+    #     print(cart_obj,'11111')
+    #     obj = super().get_object()
+    #     obj.sold_count += 1
+    #     obj.save()
+    #     return obj
 
     def form_valid(self, form):
         cart_id = self.request.session.get("cart_id")
@@ -623,11 +650,17 @@ class CheckoutView(EcomMixin, BaseMixin, CreateView):
                     form.instance.coupon = Coupon.objects.get(code=code)
                     order.total -= coupon_obj.discount_amt
                     order.save(update_fields=['coupon', 'total'])
+            
             messages.success(self.request, "Your order is on the way.")
+            del self.request.session['cart_id']
         else:
             return redirect("home:home")
-
+            
         return super().form_valid(form)
+
+        
+    
+    
 
 # wishlist
 
@@ -680,3 +713,38 @@ class ProductQuickView(View):
             }
 
         return JsonResponse(product)
+
+class SearchView(BaseMixin,TemplateView):
+    template_name = 'home/search/search.html'
+
+    def get_context_data(self,*args, **kwargs):
+        context = super().get_context_data(**kwargs)
+        kw = self.request.GET['keyword']     
+        cat = self.request.GET['category']
+        print(cat,'111111')
+        type = CategoryType.objects.filter(id=cat)
+        print(type,'0000000')
+        cat_obj = Products.objects.filter(categories=cat)
+        print(cat_obj,'000000000000')
+        # if type == "Men" or type == "Women" or type == "Kid":  1-men,3-kid,2-women
+        #     print("11111111")
+        #     if type == "Men":
+        #         cat_obj = Products.objects.filter(categories_id=type)
+        #         result = cat_obj.filter(Q(name__contains=kw) | Q(description__icontains=kw))
+        #     elif type == "Women":
+        #         cat_obj = Products.objects.filter(categories_id=type)
+        #         result = Products.objects.filter(Q(name__contains=kw) | Q(description__icontains=kw))
+        #     elif type == "Kid":
+        #         cat_obj = Products.objects.filter(categories_id=type)
+        #         result = Products.objects.filter(Q(name__contains=kw)| Q(description__icontains=kw))
+        # else:
+        #     result = Products.objects.filter(Q(name__contains=kw) | Q(description__icontains=kw))    
+        
+        # context['result'] = result
+        return context
+
+
+
+    
+
+    

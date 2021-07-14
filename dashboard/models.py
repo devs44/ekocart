@@ -193,8 +193,8 @@ class Products(DateTimeModel):
         max_digits=12, decimal_places=2, null=True, blank=True, default=0)
     discount_percent = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True)
-
     view_count = models.PositiveIntegerField(default=0, null=True, blank=True)
+    sold_count = models.PositiveBigIntegerField(default=0, null=True, blank=True)    
 
     class Meta:
         verbose_name = ('Product')
@@ -219,6 +219,7 @@ class Coupon(DateTimeModel):
     validity_count = models.PositiveIntegerField(default=1)
     discount_type = models.CharField(
         max_length=20, choices=TYPE, default="Flat Discount")
+    user = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = ('Coupon')

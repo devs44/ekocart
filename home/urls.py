@@ -57,8 +57,10 @@ urlpatterns = [
     # coupon
     path('coupon/', CouponView.as_view(), name='coupon'),
 
-
+    # wishlist
     path('add-to-wishlist/<int:pro_id>/', AddtoWishlist.as_view(), name='add-to-wishlist'),
     path('my-wishlist/', MyWishListView.as_view(), name='my-wishlist'),
 
+    # search
+    path('search/', SearchView.as_view(), name='search'),
 ]
