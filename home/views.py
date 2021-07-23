@@ -447,6 +447,12 @@ class SubscriptionView(EcomMixin, View):
 
 
 class AddToCartView(EcomMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and Customer.objects.filter(is_customer=True).exists():
+            pass
+        else:
+            return redirect("home:login")
+        return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         quantity = 1
@@ -644,7 +650,7 @@ class CheckoutView(EcomMixin, BaseMixin, CreateView):
                     order.save(update_fields=['coupon', 'total'])
             
             messages.success(self.request, "Your order is on the way.")
-            del self.request.session['cart_id']
+            
         else:
             return redirect("home:home")
             
